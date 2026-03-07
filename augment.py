@@ -91,7 +91,8 @@ def augment_occlusion(target_path, distractor_path, min_scale=0.5, max_scale=0.8
     distractor_avg_depth = np.mean(valid_distractor_depths) if len(valid_distractor_depths) > 0 else 1000
 
     # shift the distractor so it is closer than the target
-    desired_distractor_depth = target_avg_depth - 50
+    random_depth_offset = random.randint(20, 150) # 20mm to 150mm
+    desired_distractor_depth = target_avg_depth - random_depth_offset
     depth_shift = desired_distractor_depth - distractor_avg_depth
 
     # apply shift to only the actual object pixels, now the distractor is "in front" of the target in the depth map
