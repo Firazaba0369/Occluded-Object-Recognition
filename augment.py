@@ -82,6 +82,24 @@ def augment_occlusion(target_path, distractor_path, min_scale=0.5, max_scale=0.8
     roi = target_image_rgb[target_y:target_y + distractor_height, target_x:target_x + distractor_width]
     roi_depth = target_image_depth[target_y:target_y + distractor_height, target_x:target_x + distractor_width]
 
+    # figure out how far away target is in the roi
+    valid_target_depths = roi_depth[roi_depth > 0]
+    target_avg_depth = np.mean(valid_target_depths) if len(valid_target_depths) > 0 else 1000
+
+    # figure out how far the distractor is
+    valid_distractor_depths = resized_distractor_depth[resized_distractor_mask > 0]
+    distractor_avg_depth = np.mean(valid_distractor_depths) if len(valid_distractor_depths) > 0 else 1000
+
+    # shift the distractor so it is closer than the target
+    desired_distractor_depth = target_avg_depth - 50
+    depth_shift = desired_distractor_depth - distractor_avg_depth
+
+    # apply shift to only the actual object pixels, now the distractor is "in front" of the target in the depth map
+    temp_depth = resized_distractor_depth.astype(np.float32)
+    temp_depth[resized_distractor_mask > 0] += depth_shift
+    temp_depth = np.clip(temp_depth, 1, 65535)  # prevent negative distances
+    resized_distractor_depth = temp_depth.astype(np.uint16)
+
     # blacks out where the distractor will go
     roi_bg = cv2.bitwise_and(roi, roi, mask=distractor_mask_inverted)
     roi_bg_depth = cv2.bitwise_and(roi_depth, roi_depth, mask=distractor_mask_inverted)
