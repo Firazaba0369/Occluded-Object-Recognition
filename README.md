@@ -1,2 +1,5 @@
 # Occluded-Object-Recognition
 Final Project for CSC 487
+
+Manually labelled, 7-8 images from each scene, 100 images total, real world test set (too big for github to take as upload). Labels are in the labels zip.
+https://drive.google.com/file/d/1FrKn0rFW3LOv93BRrep7J1-yMMOcK-cu/view?usp=sharing
