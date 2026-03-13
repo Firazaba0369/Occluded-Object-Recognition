@@ -153,7 +153,7 @@ def get_random_frame(dataset_root):
 
         # some of the images don't have a matching depth/mask for some reason
         if chosen_depth.exists() and chosen_mask.exists():
-            return str(chosen_rgb), str(chosen_depth), str(chosen_mask)
+            return str(chosen_rgb), str(chosen_depth), str(chosen_mask), chosen_category.name
 
 
 def generate_test_sets(dataset_root, min_scale, max_scale, output_folder, num_images):
@@ -174,11 +174,11 @@ def generate_test_sets(dataset_root, min_scale, max_scale, output_folder, num_im
     """
 
     for image_number in range(num_images):
-        random_target_rgb, random_target_depth, _ = get_random_frame(dataset_root)
-        random_distractor_rgb, random_distractor_depth, random_distractor_mask = get_random_frame(dataset_root)
+        random_target_rgb, random_target_depth, _, target_label = get_random_frame(dataset_root)
+        random_distractor_rgb, random_distractor_depth, random_distractor_mask, _ = get_random_frame(dataset_root)
 
-        rgb_out = f"random_rgb_{image_number}.png"
-        depth_out = f"random_depth_{image_number}.png"
+        rgb_out = f"{target_label}_random_rgb_{image_number}.png"
+        depth_out = f"{target_label}_random_depth_{image_number}.png"
 
         augment_occlusion(random_target_rgb, random_target_depth, random_distractor_rgb, random_distractor_depth,
                           random_distractor_mask, rgb_out, depth_out, output_folder, min_scale, max_scale)
