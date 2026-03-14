@@ -1,2 +1,4 @@
 /rgbd-dataset/
+/rgbd-dataset_split/
+/masked_sets/
 rgbd-dataset.tar

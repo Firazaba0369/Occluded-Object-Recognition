@@ -4,6 +4,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import os
+import shutil
 
 def augment_occlusion(t_rgb_path, t_depth_path, d_rgb_path, d_depth_path, d_mask_path,
                       output_rgb_name, output_depth_name, output_path, min_scale=0.5, max_scale=0.8):
@@ -154,11 +155,10 @@ def get_random_frame(dataset_root):
         # some of the images don't have a matching depth/mask for some reason
         if chosen_depth.exists() and chosen_mask.exists():
             return str(chosen_rgb), str(chosen_depth), str(chosen_mask), chosen_category.name
-
-
-def generate_test_sets(dataset_root, min_scale, max_scale, output_folder, num_images):
+        
+def generate_masked_sets(dataset_root, min_scale, max_scale, output_folder, num_images):
     """
-    Applies occlusion on a random set of images from the dataset with other random images from the dataset
+    Applies occlusion on a known set of images from the dataset with random images from the dataset
     Puts the resulting images into the output folder specified.
 
     Args:
@@ -168,23 +168,94 @@ def generate_test_sets(dataset_root, min_scale, max_scale, output_folder, num_im
         output_folder (str): the name of the output folder
         num_images (int): number of images being created
 
-
     Returns:
         nothing, folders will be made
     """
 
     for image_number in range(num_images):
         random_target_rgb, random_target_depth, _, target_label = get_random_frame(dataset_root)
-        random_distractor_rgb, random_distractor_depth, random_distractor_mask, _ = get_random_frame(dataset_root)
-
+        random_distractor_rgb, random_distractor_depth, random_distractor_mask, distractor_label = get_random_frame(dataset_root)
+            
         rgb_out = f"{target_label}_random_rgb_{image_number}.png"
         depth_out = f"{target_label}_random_depth_{image_number}.png"
 
         augment_occlusion(random_target_rgb, random_target_depth, random_distractor_rgb, random_distractor_depth,
                           random_distractor_mask, rgb_out, depth_out, output_folder, min_scale, max_scale)
 
-    print("test set generation complete")
+    print("masked set generation complete")
 
-generate_test_sets(r"G:\Temp Storage for Final Project DL\rgbd-dataset", 0.2, 0.4, "low occlusion", 200)
-generate_test_sets(r"G:\Temp Storage for Final Project DL\rgbd-dataset", 0.4, 0.6, "med occlusion", 200)
-generate_test_sets(r"G:\Temp Storage for Final Project DL\rgbd-dataset", 0.6, 0.8, "high occlusion", 200)
+def split_dataset(dataset_root, output_folder, train_ratio):
+    """
+    Splits the dataset into train and test sets by moving files into new folders
+
+    Args:
+        dataset_root: the root of the washington rgbd dataset
+        output_folder: the name of the output folder
+        train_ratio (float): percentage of images to be put in the training set
+
+    Returns:
+        nothing, folders will be made
+    """
+
+    # get root path and categories
+    root_path = Path(dataset_root)
+    output_path = Path(output_folder)
+    categories = [d for d in root_path.iterdir() if d.is_dir()]
+
+    # get all rgb and depth files and split them into train and test sets
+    for category in categories:
+        category_name = category.name
+        instances = [d for d in category.iterdir() if d.is_dir()]
+        rgb_files = []
+
+        # only look at rgb files to determine train/test split, depth files will be moved with their matching rgb files
+        for instance in instances:
+            rgb_files.extend([
+                f for f in instance.glob("*_crop.png")
+                if "depthcrop" not in f.name
+            ])
+
+        # shuffle the files to ensure random distribution of train/test sets
+        random.shuffle(rgb_files)
+        num_train = int(len(rgb_files) * train_ratio)
+
+        # split into train and test sets
+        train_files = rgb_files[:num_train]
+        test_files = rgb_files[num_train:]
+
+        # move the files into their train and test folders
+        for file in train_files:
+            dest = output_path / "train" / category_name / file.parent.name
+            dest.mkdir(parents=True, exist_ok=True)
+
+            shutil.copy2(file, dest / file.name)
+
+            depth_file = file.parent / file.name.replace("_crop.png", "_depthcrop.png")
+            if depth_file.exists():
+                shutil.copy2(depth_file, dest / depth_file.name)
+
+            mask_file = file.parent / file.name.replace("_crop.png", "_maskcrop.png")
+            if mask_file.exists():
+                shutil.copy2(mask_file, dest / mask_file.name)
+
+        for file in test_files:
+            dest = output_path / "test" / category_name / file.parent.name
+            dest.mkdir(parents=True, exist_ok=True)
+
+            shutil.copy2(file, dest / file.name)
+
+            depth_file = file.parent / file.name.replace("_crop.png", "_depthcrop.png")
+            if depth_file.exists():
+                shutil.copy2(depth_file, dest / depth_file.name)
+
+            mask_file = file.parent / file.name.replace("_crop.png", "_maskcrop.png")
+            if mask_file.exists():
+                shutil.copy2(mask_file, dest / mask_file.name)
+
+    print("dataset splitting complete")
+
+split_dataset(r".\rgbd-dataset", r".\rgbd-dataset_split", 0.7)
+generate_masked_sets(r".\rgbd-dataset_split\train", 0.1, 0.9, r".\masked_sets\train", 500)
+generate_masked_sets(r".\rgbd-dataset_split\test", 0.2, 0.4, r".\masked_sets\test\low_occlusion", 200)
+generate_masked_sets(r".\rgbd-dataset_split\test", 0.4, 0.6, r".\masked_sets\test\medium_occlusion", 200)
+generate_masked_sets(r".\rgbd-dataset_split\test", 0.6, 0.8, r".\masked_sets\test\high_occlusion", 200)
