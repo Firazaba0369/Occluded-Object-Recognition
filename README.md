@@ -7,4 +7,4 @@ https://drive.google.com/file/d/1FrKn0rFW3LOv93BRrep7J1-yMMOcK-cu/view?usp=shari
 Link to grab the individual object dataset:
 https://rgbd-dataset.cs.washington.edu/dataset/rgbd-dataset/rgbd-dataset.tar
 
-Masked set with more train data: https://drive.google.com/file/d/1k6Rf9UZv170LOjEViURy63Gfky70lGW6/view?usp=sharing
+Masked set with more train data (updated again): [https://drive.google.com/file/d/1k6Rf9UZv170LOjEViURy63Gfky70lGW6/view?usp=sharing](https://drive.google.com/file/d/1FrKn0rFW3LOv93BRrep7J1-yMMOcK-cu/view?usp=sharing)
