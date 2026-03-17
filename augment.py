@@ -255,7 +255,7 @@ def split_dataset(dataset_root, output_folder, train_ratio):
     print("dataset splitting complete")
 
 split_dataset(r".\rgbd-dataset", r".\rgbd-dataset_split", 0.7)
-generate_masked_sets(r".\rgbd-dataset_split\train", 0.1, 0.9, r".\masked_sets\train", 500)
+generate_masked_sets(r".\rgbd-dataset_split\train", 0.1, 0.9, r".\masked_sets\train", 5000)
 generate_masked_sets(r".\rgbd-dataset_split\test", 0.2, 0.4, r".\masked_sets\test\low_occlusion", 200)
 generate_masked_sets(r".\rgbd-dataset_split\test", 0.4, 0.6, r".\masked_sets\test\medium_occlusion", 200)
 generate_masked_sets(r".\rgbd-dataset_split\test", 0.6, 0.8, r".\masked_sets\test\high_occlusion", 200)
